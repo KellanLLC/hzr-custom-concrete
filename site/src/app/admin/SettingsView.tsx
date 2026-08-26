@@ -9,6 +9,7 @@ type Props = { data: PanelData; setData: React.Dispatch<React.SetStateAction<Pan
 
 const TEXT_FIELDS = [
   'owner_alert_template',
+  'customer_confirm_template',
   'review_template',
   'followup_1_template',
   'followup_2_template',
@@ -31,6 +32,7 @@ const TEXT_FIELDS = [
 type Form = Record<(typeof TEXT_FIELDS)[number], string> & {
   owner_phone: string;
   notify_owner: boolean;
+  notify_customer: boolean;
   screening_enabled: boolean;
 };
 
@@ -39,6 +41,7 @@ function fromSettings(st: Record<string, string>): Form {
   for (const k of TEXT_FIELDS) f[k] = st[k] || '';
   f.owner_phone = prettyPhone(st.owner_phone || '');
   f.notify_owner = st.notify_owner === '1';
+  f.notify_customer = st.notify_customer === '1';
   f.screening_enabled = st.screening_enabled === '1';
   return f;
 }
@@ -160,6 +163,11 @@ export function SettingsView({ data, setData }: Props) {
 
       <Panel title="Alert text" hint="What lands on your phone when the site form is sent. {{link}} opens the panel on that exact request; {{name}}, {{phone}} and {{product}} are theirs.">
         <textarea className={s.textarea} rows={3} value={f.owner_alert_template} onChange={(e) => set('owner_alert_template', e.target.value)} aria-label="Owner alert message" />
+      </Panel>
+
+      <Panel title="Customer confirmation" hint="Texted back to the customer the moment their request lands and clears the spam check, so the form answers on their phone too. {{name}} becomes their first name.">
+        <Switch on={f.notify_customer} onChange={(v) => set('notify_customer', v)} label="Text the customer a confirmation" />
+        <textarea className={s.textarea} rows={3} value={f.customer_confirm_template} onChange={(e) => set('customer_confirm_template', e.target.value)} aria-label="Customer confirmation message" />
       </Panel>
 
       <Panel title="Review request" hint="The first message. {{link}} is the tracked link to your rating page: leave it in, or it is added to the end anyway, because that link is how a tap is measured and how the follow-ups know to stop.">

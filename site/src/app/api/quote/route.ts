@@ -2,7 +2,7 @@ import { afterResponse, db } from '@/lib/server/env';
 import { keepClockRunning } from '@/lib/server/followups';
 import { json, readJson, sameOrigin, str } from '@/lib/server/http';
 import { normalisePhone } from '@/lib/server/phone';
-import { floodGuardTripped, insertQuote, sendOwnerAlert } from '@/lib/server/quotes';
+import { floodGuardTripped, insertQuote, sendCustomerConfirm, sendOwnerAlert } from '@/lib/server/quotes';
 import { type Enquiry, reportScanDown, reportSpam, scanEnquiry } from '@/lib/server/spamscan';
 
 export const dynamic = 'force-dynamic';
@@ -151,6 +151,11 @@ export async function POST(req: Request) {
             console.error('[spam report]', err instanceof Error ? err.message : err),
           );
         }
+        // The confirmation to the customer and the alert to the owner, in
+        // that order, and each on its own: one failing never blocks the other.
+        await sendCustomerConfirm(name, phone).catch((err) =>
+          console.error('[customer confirm]', err instanceof Error ? err.message : err),
+        );
         await sendOwnerAlert(id, name, phoneRaw, product || 'Enquiry');
       })(),
       'spam scan',

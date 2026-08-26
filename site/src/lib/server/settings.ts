@@ -29,6 +29,7 @@ export async function writeSetting(key: string, value: string) {
 export const TEXT_KEYS = [
   'review_template',
   'owner_alert_template',
+  'customer_confirm_template',
   'followup_1_template',
   'followup_2_template',
   'followup_3_template',
@@ -43,7 +44,7 @@ export const TEXT_KEYS = [
   'screening_done_sub',
 ] as const;
 
-export const FLAG_KEYS = ['notify_owner', 'screening_enabled'] as const;
+export const FLAG_KEYS = ['notify_owner', 'notify_customer', 'screening_enabled'] as const;
 
 /** Hours until follow-up N (1-3), or null once that rung is switched off. */
 export function followupHours(settings: Settings, step: number): number | null {

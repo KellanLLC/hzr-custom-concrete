@@ -56,12 +56,12 @@ export function Footer() {
             <a className="ft-a" href={business.social.instagram} target="_blank" rel="noopener" style={rowLink}>
               {business.social.instagramHandle}
             </a>
-            <a className="ft-a" href="/contact" style={rowLink}>
+            <Link className="ft-a" href="/contact" style={rowLink}>
               Contact
-            </a>
-            <a className="ft-a" href="/faq" style={rowLink}>
+            </Link>
+            <Link className="ft-a" href="/faq" style={rowLink}>
               Straight answers
-            </a>
+            </Link>
             <a className="ft-a" href="#estimate" style={rowLink}>
               Request an estimate
             </a>

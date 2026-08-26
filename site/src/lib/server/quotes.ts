@@ -1,6 +1,6 @@
 import type { Quote, SpecRow } from '@/lib/panel-types';
 import { db } from './env';
-import { normalisePhone } from './phone';
+import { firstName, normalisePhone } from './phone';
 import { readSettings } from './settings';
 import { sendSms } from './sms';
 import { fill, panelLink } from './templates';
@@ -87,6 +87,20 @@ export async function floodGuardTripped(ip: string) {
  * (and after the spam scan has cleared the submission), so GoHighLevel being
  * down can never fail a customer's submission — it is already saved.
  */
+/**
+ * Texts the customer a confirmation once their request has cleared the spam
+ * check, so the form answers back on their phone and not just on the screen.
+ * {{name}} becomes their first name; the message is a setting, and the
+ * notify_customer switch turns the whole thing off.
+ */
+export async function sendCustomerConfirm(name: string, phoneE164: string) {
+  const settings = await readSettings();
+  if (settings.notify_customer !== '1') return;
+  const template = (settings.customer_confirm_template || '').trim();
+  if (!template) return;
+  await sendSms(phoneE164, fill(template, { name: firstName(name) }));
+}
+
 export async function sendOwnerAlert(id: number, name: string, phoneRaw: string, product: string) {
   const settings = await readSettings();
   if (settings.notify_owner !== '1') return;

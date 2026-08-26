@@ -86,6 +86,11 @@ INSERT OR IGNORE INTO settings (key, value) VALUES
   -- the panel on that exact request.
   ('owner_alert_template', 'New estimate request from {{name}} ({{phone}}): {{product}}. See it here: {{link}}'),
 
+  -- What the customer gets back the moment their request clears the spam
+  -- check. {{name}} becomes their first name.
+  ('notify_customer', '1'),
+  ('customer_confirm_template', 'Hi {{name}}, thank you for reaching out to HZR Custom Concrete. Anthony got your request and will get back to you as soon as possible. Any questions in the meantime, call or text 805-589-7879.'),
+
   -- The first review text. {{link}} is the tracked link to the rating page.
   ('review_template', 'Hi {{name}}, this is Anthony from HZR Custom Concrete. Thanks again for having us out. Mind telling us how we did? {{link}}'),
 
