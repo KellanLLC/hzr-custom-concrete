@@ -1,0 +1,14 @@
+# deps / build
+/node_modules
+/.next/
+/out/
+/.open-next/
+*.tsbuildinfo
+next-env.d.ts
+
+# runtime state
+.DS_Store
+.wrangler
+
+# local env
+.env*

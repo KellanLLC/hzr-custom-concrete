@@ -1,0 +1,95 @@
+{
+	"$schema": "site/node_modules/wrangler/config-schema.json",
+
+	// Must match the Workers project name in the Cloudflare dashboard — this is
+	// the same Worker that has served the static site (and holds the
+	// hzrconcrete.com custom domain), upgraded in place to the full app.
+	"name": "hzr-custom-concrete",
+
+	// ---------------------------------------------------------------------
+	// Why this file is at the repo root and not in site/
+	//
+	// The deploy command (`npx wrangler deploy`) is run from the repo root, so
+	// this is the only place wrangler will look for a config. Everything the
+	// deploy needs lives in this file — including the build itself.
+	//
+	// The site is a Next.js app, which cannot run on Workers as-is; the
+	// OpenNext adapter compiles it into a Worker plus a folder of static
+	// assets. `build.command` below does that compile, and it runs before
+	// wrangler uploads anything.
+	// ---------------------------------------------------------------------
+	"build": {
+		"cwd": "site",
+		"command": "npm ci && npx opennextjs-cloudflare build --skipWranglerConfigCheck"
+	},
+
+	// The entry is a thin wrapper (site/custom-worker.ts) around the worker the
+	// build above produces at site/.open-next/worker.js; it adds the follow-up
+	// clock's Durable Object class, which the generated file cannot carry.
+	"main": "site/custom-worker.ts",
+	"assets": {
+		"directory": "site/.open-next/assets",
+		"binding": "ASSETS"
+	},
+
+	"compatibility_date": "2026-08-13",
+	// nodejs_compat: the Next.js server needs node builtins.
+	// global_fetch_strictly_public: makes fetch() to our own URLs go back out
+	// through the public internet rather than looping inside the Worker.
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+	// next/image has no optimizer on Workers without this binding.
+	"images": {
+		"binding": "IMAGES"
+	},
+
+	// ---------------------------------------------------------------------
+	// The shop panel (/admin) and everything behind it.
+	//
+	// DB — estimate requests, review requests, and the settings bag.
+	//      Schema in db/schema.sql; apply with
+	//        npx wrangler d1 execute hzr-custom-concrete --remote --file=db/schema.sql
+	//
+	// Secrets, set once with `npx wrangler secret put <NAME>` from this
+	// directory and never written to this file:
+	//   ADMIN_PASSWORD   what you type to open /admin
+	//   SESSION_SECRET   any long random string; change it to sign everyone out
+	//   GHL_WEBHOOK_URL  the GoHighLevel inbound webhook that sends the texts
+	//   GEMINI_API_KEY   optional — the spam trap's AI layer; unset = scan off
+	//   SPAM_WEBHOOK_URL optional — Discord channel for blocked submissions
+	// ---------------------------------------------------------------------
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "hzr-custom-concrete",
+			"database_id": "01980d4e-326d-461d-8ef8-72bd34af1009"
+		}
+	],
+	"vars": {
+		// Goes out in every GoHighLevel payload as the `company` field.
+		"COMPANY_NAME": "HZR Custom Concrete"
+	},
+
+	// ---------------------------------------------------------------------
+	// The follow-up clock.
+	//
+	// Review follow-ups have to go out every ten minutes whether or not anyone
+	// is on the site. This account is at Cloudflare's limit of 5 cron triggers
+	// (API error 10072), so the clock is a Durable Object alarm instead
+	// (site/src/worker/sweeper.ts): one object that rings itself every ten
+	// minutes, durably, and runs the sweep by calling the app's own
+	// /api/admin/run-followups route over the service binding below.
+	// SQLite-backed, so it is available on every plan.
+	// ---------------------------------------------------------------------
+	"durable_objects": {
+		"bindings": [{ "name": "SWEEPER", "class_name": "Sweeper" }]
+	},
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["Sweeper"] }],
+	"services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "hzr-custom-concrete" }],
+
+	// Estimate submissions and every text that is sent are logged, so the log
+	// has to be queryable.
+	"observability": {
+		"enabled": true
+	}
+}
