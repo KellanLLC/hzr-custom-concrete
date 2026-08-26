@@ -12,6 +12,25 @@ Cloudflare Pages (or Workers Assets): connect this repository, framework
 preset **None**, build command **none**, output directory **`/`** (repo root).
 That's it — every file is served as-is.
 
+## What the page does
+
+Four behaviours live in [site.js](site.js); everything else is CSS.
+
+- **The header** sits transparent over the hero and turns into a solid bar
+  past 60px of scroll, shrinking the lockup as it goes.
+- **Below 1041px** the nav folds into a menu behind the button in the header,
+  and the hero's quick-estimate card is replaced by a link down to the full
+  form. The menu button only appears once the script has run, so with no
+  JavaScript the links simply stay out in the bar — nothing is stranded
+  behind a control that cannot open.
+- **The sticky call bar** stays up the whole way down and steps aside for the
+  hero and the estimate form, which carry their own calls to action. It reads
+  the scroll position directly rather than through an observer, so it can
+  never be left offstage by an event that never fires, and it goes
+  `visibility: hidden` when away so it leaves the tab order with it. The band
+  it lands on is reserved under the footer, so it never crops the wordmark.
+- **Both estimate forms** validate and show a thank-you.
+
 ## The licensing toggle
 
 **No "licensed, bonded & insured" claim appears on the page right now, on
@@ -24,6 +43,27 @@ The design's licensing copy is all still here, behind a switch: put the real,
 verified CSLB number into `CSLB_NUMBER` at the top of [site.js](site.js) and
 the trust bar, the about facts, and the footer line all switch to the licensed
 wording at once. Verify at cslb.ca.gov or (800) 321-2752 first.
+
+## Where this departs from the design file
+
+Deliberate, and all in the same direction — the design is a mockup, this is
+the live page:
+
+- **Licensing is off**, as above. The design ships it on with a placeholder
+  number.
+- **The forms work.** The design's submit is an `alert()` saying it is a demo;
+  here both forms validate, mark empty fields and swap to a thank-you.
+- **Review attributions keep their dates** ("Yelp, Sept 2024" rather than
+  "Yelp"), and use a middot rather than an em dash, matching the separators
+  used elsewhere on the page.
+- **Form inputs are a flat 16px.** Anything smaller makes iOS zoom the page
+  when a field takes focus.
+- **No hover lift.** Buttons change state on hover; they do not move.
+- **Below 380px the header lockup steps down** a size so the row cannot
+  overrun on the smallest phones.
+- Head matter the mockup has no place for: `lang`, Open Graph tags,
+  `GeneralContractor` structured data, a theme colour, a touch icon and font
+  preloads.
 
 ## Forms
 

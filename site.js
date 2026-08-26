@@ -1,6 +1,7 @@
 /* HZR Custom Concrete — implemented from "HZR Site.dc.html" (Claude Design).
-   Three behaviours: the header's scrolled state, the two estimate forms'
-   demo submit, and the licensing toggle. Everything else is CSS. */
+   Four behaviours: the header's scrolled state, the narrow-width menu, the
+   sticky call bar stepping aside for the hero and the estimate form, and the
+   two estimate forms' submit. Everything else is CSS. */
 (() => {
   "use strict";
 
@@ -26,19 +27,60 @@
     set("footer-p", "Owner-run concrete contractor for residential and commercial property across Ventura County, California. Licensed, bonded and insured.");
   }
 
-  /* ---- header: transparent over the hero, dark bar once scrolled ---- */
   const hdr = document.querySelector("[data-hdr]");
-  if (hdr) {
-    let raf = 0;
-    const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        hdr.classList.toggle("is-stuck", window.scrollY > 60);
-      });
+  const bar = document.querySelector("[data-callbar]");
+
+  /* ---- what the scroll position drives ----
+     The header goes from transparent over the hero to a solid bar, and the
+     sticky call bar steps aside for the hero and the estimate form, which
+     carry their own calls to action. "Steps aside" means once a section
+     actually fills the screen, not when a sliver of it is peeking in.
+     Both read straight off the scroll position rather than an observer, so
+     the bar is never left stranded offstage by an event that never fires. */
+  const heroEl = document.getElementById("top");
+  const estimateEl = document.getElementById("estimate");
+  const BAR_H = 86;
+
+  const fills = (el, room) => {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return Math.min(r.bottom, room) - Math.max(r.top, 0) >= room * 0.6;
+  };
+
+  const sync = () => {
+    if (hdr) hdr.classList.toggle("is-stuck", window.scrollY > 60);
+    if (bar) {
+      const room = Math.max((window.innerHeight || 0) - BAR_H, 1);
+      bar.classList.toggle("is-here", !(fills(heroEl, room) || fills(estimateEl, room)));
+    }
+  };
+
+  sync();
+  addEventListener("scroll", sync, { passive: true });
+  addEventListener("resize", sync, { passive: true });
+
+  /* ---- the narrow-width menu ----
+     The button only exists once this script has run (the `js` class on
+     <html> reveals it), so with no JS the links stay out in the bar and
+     nothing is stranded behind a control that cannot open. */
+  const menuBtn = document.querySelector("[data-menu]");
+  if (hdr && menuBtn) {
+    const setMenu = (open) => {
+      hdr.classList.toggle("is-open", open);
+      menuBtn.setAttribute("aria-expanded", String(open));
     };
-    onScroll();
-    addEventListener("scroll", onScroll, { passive: true });
+    menuBtn.addEventListener("click", () => setMenu(!hdr.classList.contains("is-open")));
+    hdr.querySelectorAll(".hdr__panel a").forEach((a) =>
+      a.addEventListener("click", () => setMenu(false)));
+    addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && hdr.classList.contains("is-open")) {
+        setMenu(false);
+        menuBtn.focus();
+      }
+    });
+    const wide = matchMedia("(min-width: 1041px)");
+    const onWide = () => { if (wide.matches) setMenu(false); };
+    wide.addEventListener ? wide.addEventListener("change", onWide) : wide.addListener(onWide);
   }
 
   /* ---- estimate forms: validate, then swap to the thank-you ----
